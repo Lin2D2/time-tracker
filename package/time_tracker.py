@@ -143,6 +143,20 @@ class TimeTracker:
     def run(self):
         self.root.mainloop()
 
+    def reset(self):
+        self.start_time = None
+        self.end_time = None
+        self.last_time_step = None
+        self.total_time = 0
+        self.current_activity = None
+        self.paused = False
+        self.started = False
+        self.right_button.config(text="Stopped")
+        self.right_button["state"] = tk.DISABLED
+        self.left_button.config(text="Start")
+        self.left_button["state"] = tk.NORMAL
+        self.time_text.config(text="00:00:00")
+
     def update_time(self):
         if self.started and not self.paused:
             current_time_step = time.time()
@@ -172,15 +186,19 @@ class TimeTracker:
             self.left_button["state"] = tk.DISABLED
 
     def stop_action(self):
-        self.paused = True
-        self.right_button.config(text="Stoped")
-        self.right_button["state"] = tk.DISABLED
-        self.left_button.config(text="Resume")
-        self.left_button["state"] = tk.NORMAL
-        current_time_step = time.time()
-        time_diff = current_time_step - self.last_time_step
-        self.last_time_step = current_time_step
-        self.total_time += time_diff
+        if not self.paused:
+            self.paused = True
+            self.right_button.config(text="Save")
+            self.right_button["state"] = tk.NORMAL
+            self.left_button.config(text="Resume")
+            self.left_button["state"] = tk.NORMAL
+            current_time_step = time.time()
+            time_diff = current_time_step - self.last_time_step
+            self.last_time_step = current_time_step
+            self.total_time += time_diff
+        else:
+            # TODO save!
+            self.reset()
 
     def quit_action(self):
         # TODO save before quiting
