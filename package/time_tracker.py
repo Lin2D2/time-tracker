@@ -21,7 +21,6 @@ class TimeTracker:
         # colors
         primary_color = "#323232"
         secoundary = ""
-        background_color = "black"
         button_bg_color = "#414141"
         button_hl_color = "#505050"
         button_fg_color = "white"
@@ -29,7 +28,7 @@ class TimeTracker:
         # root config
         self.root.title("Time Tracker")
         self.root.geometry("950x500")
-        self.root.configure(background=background_color)
+        self.root.configure(background=primary_color)
 
         # TODO not working
         # pyglet.font.add_directory('resources')
@@ -39,7 +38,7 @@ class TimeTracker:
 
         # definition
         time_frame = tk.Frame(self.root,
-                              bg=background_color,
+                              bg=primary_color,
                               highlightthickness=1,
                               highlightbackground=primary_color)
 
@@ -58,15 +57,19 @@ class TimeTracker:
                                                highlightbackground=button_hl_color,
                                                font=("", 15),
                                                width=73)
-
-        self.left_button = tk.Button(self.root,
+        upper_button_frame = tk.Frame(self.root,
+                                      background=primary_color,
+                                      highlightbackground=button_hl_color,
+                                      highlightthickness=1,
+                                      )
+        self.left_button = tk.Button(upper_button_frame,
                                      bg=button_bg_color, foreground=button_fg_color,
                                      highlightthickness=1,
                                      highlightbackground=button_hl_color,
                                      text="Start", font=button_font,
                                      padx=180, pady=5,
                                      command=self.start_action_resume_action)
-        self.right_button = tk.Button(self.root,
+        self.right_button = tk.Button(upper_button_frame,
                                       bg=button_bg_color, foreground=button_fg_color,
                                       highlightthickness=1,
                                       highlightbackground=button_hl_color,
@@ -81,14 +84,19 @@ class TimeTracker:
                                    highlightthickness=1,
                                    height=170, width=880)
 
-        self.list_delete_button = tk.Button(self.root,
+        list_button_frame = tk.Frame(self.root,
+                                     background=primary_color,
+                                     highlightbackground=button_hl_color,
+                                     highlightthickness=1,
+                                     )
+        self.list_delete_button = tk.Button(list_button_frame,
                                             bg=button_bg_color, foreground=button_fg_color,
                                             highlightthickness=1,
                                             highlightbackground=button_hl_color,
                                             text="Delete", font=button_font,
                                             padx=75, pady=5)
         self.list_delete_button["state"] = tk.DISABLED
-        self.list_edit_button = tk.Button(self.root, foreground=button_fg_color,
+        self.list_edit_button = tk.Button(list_button_frame, foreground=button_fg_color,
                                           bg=button_bg_color,
                                           highlightthickness=1,
                                           highlightbackground=button_hl_color,
@@ -96,25 +104,30 @@ class TimeTracker:
                                           padx=75, pady=5)
         self.list_edit_button["state"] = tk.DISABLED
 
-        self.settings_button = tk.Button(self.root, foreground=button_fg_color,
+        lower_button_row_frame = tk.Frame(self.root,
+                                          background=primary_color,
+                                          highlightbackground=button_hl_color,
+                                          highlightthickness=1,
+                                          )
+        self.settings_button = tk.Button(lower_button_row_frame, foreground=button_fg_color,
                                          bg=button_bg_color,
                                          highlightthickness=1,
                                          highlightbackground=button_hl_color,
                                          text="Settings", font=button_font,
                                          padx=70, pady=5)
-        self.about_button = tk.Button(self.root, foreground=button_fg_color,
+        self.about_button = tk.Button(lower_button_row_frame, foreground=button_fg_color,
                                       bg=button_bg_color,
                                       highlightthickness=1,
                                       highlightbackground=button_hl_color,
                                       text="About", font=button_font,
                                       padx=70, pady=5)
-        self.help_button = tk.Button(self.root,
+        self.help_button = tk.Button(lower_button_row_frame,
                                      bg=button_bg_color, foreground=button_fg_color,
                                      highlightthickness=1,
                                      highlightbackground=button_hl_color,
                                      text="Help", font=button_font,
                                      padx=70, pady=5)
-        self.quit_button = tk.Button(self.root,
+        self.quit_button = tk.Button(lower_button_row_frame,
                                      bg=button_bg_color, foreground=button_fg_color,
                                      highlightthickness=1,
                                      highlightbackground=button_hl_color,
@@ -123,21 +136,29 @@ class TimeTracker:
                                      command=self.quit_action)
 
         # layout
+        time_frame.pack(expand=True)
         self.time_text.pack()
-        time_frame.grid(row=0, column=0, columnspan=4, padx=10, pady=5)
-        self.current_activity_input.grid(row=1, column=0, columnspan=4, padx=10, pady=5)
-        self.left_button.grid(row=2, column=0, padx=10, columnspan=2, pady=5)
-        self.right_button.grid(row=2, column=2, padx=10, columnspan=2, pady=5)
-        self.list_frame.grid(row=3, column=0, columnspan=4, padx=10, pady=10)
-        self.list_delete_button.grid(row=4, column=2, padx=0, pady=5)
-        self.list_edit_button.grid(row=4, column=3, padx=0, pady=5)
-        self.settings_button.grid(row=5, column=0, padx=0, pady=10)
-        self.about_button.grid(row=5, column=1, padx=0, pady=10)
-        self.help_button.grid(row=5, column=2, padx=0, pady=10)
-        self.quit_button.grid(row=5, column=3, padx=0, pady=10)
 
-        self.root.grid_columnconfigure(0, weight=1)
-        self.root.grid_columnconfigure(4, weight=1)
+        self.current_activity_input.pack(expand=True)
+
+        upper_button_frame.pack(expand=True)
+        self.left_button.grid(row=0, column=0, padx=10, pady=5)
+        self.right_button.grid(row=0, column=1, padx=10, pady=5)
+
+        self.list_frame.pack(expand=True)
+
+        list_button_frame.pack(expand=True)
+        self.list_delete_button.grid(row=0, column=1, padx=0, pady=5)
+        self.list_edit_button.grid(row=0, column=2, padx=0, pady=5)
+
+        lower_button_row_frame.pack(expand=True)
+        self.settings_button.grid(row=0, column=0, padx=0, pady=10)
+        self.about_button.grid(row=0, column=1, padx=0, pady=10)
+        self.help_button.grid(row=0, column=2, padx=0, pady=10)
+        self.quit_button.grid(row=0, column=3, padx=0, pady=10)
+
+        # self.root.grid_columnconfigure(0, weight=1)
+        # self.root.grid_columnconfigure(4, weight=1)
         self.root.after(100, self.update_time)
 
     def run(self):
