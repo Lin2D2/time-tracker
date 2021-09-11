@@ -94,7 +94,7 @@ class TimeTracker:
                                    background=primary_color,
                                    highlightbackground=button_hl_color,
                                    highlightthickness=1,
-                                   height=170, width=880)
+                                   height=230, width=880)
 
         list_button_frame_frame = tk.Frame(self.root,
                                            background=primary_color,
@@ -165,8 +165,10 @@ class TimeTracker:
         upper_button_frame.columnconfigure(1, weight=1)
 
         self.list_frame.pack(fill=tk.BOTH)
-        for time_history in self.time_history_list:
-            self.add_history_time_element(time_history["start_time"],
+        self.list_frame.grid_propagate(False)
+        for index, time_history in enumerate(self.time_history_list):
+            self.add_history_time_element(index,
+                                          time_history["start_time"],
                                           time_history["end_time"],
                                           time_history["total_time"])
 
@@ -221,15 +223,20 @@ class TimeTracker:
             print(f"diff: {self.total_time - time_diff_datetime.total_seconds()}\n")
         self.root.after(100, self.update_time)
 
-    def add_history_time_element(self, start_time, end_time, total_time):
-        row_frame = tk.Frame(self.list_frame, height=50, bg="red")
+    def add_history_time_element(self, index, start_time, end_time, total_time):
+        row_frame = tk.Frame(self.list_frame, height=20, width=1000)
         start_time_label = tk.Label(row_frame, text=start_time)
         end_time_label = tk.Label(row_frame, text=end_time)
         total_time_label = tk.Label(row_frame, text=total_time)
-        row_frame.pack(expand=True)
+        row_frame.grid(row=index)
+        row_frame.grid_propagate(False)
+        self.list_frame.columnconfigure(0, weight=1)
         start_time_label.grid(row=0, column=0)
         end_time_label.grid(row=0, column=1)
         total_time_label.grid(row=0, column=2)
+        row_frame.columnconfigure(0, weight=1)
+        row_frame.columnconfigure(1, weight=1)
+        row_frame.columnconfigure(2, weight=1)
 
     def start_action_resume_action(self):
         if not self.paused:
@@ -267,13 +274,13 @@ class TimeTracker:
                 total_time_delta = datetime.timedelta(seconds=self.total_time)
                 start_time = self.start_datetime.strftime("%-d %B %Y, %I:%M:%S%p")
                 end_time = datetime.datetime.now().strftime("%-d %B %Y, %I:%M:%S%p")
-                total_time = f"{total_time_delta.days}:{time.strftime('%H:%M:%S%', time.gmtime(total_time_delta.seconds))}"
+                total_time = f"{total_time_delta.days}:{time.strftime('%H:%M:%S', time.gmtime(total_time_delta.seconds))}"
                 self.time_history_list.append({"start_time": start_time,
                                                "end_time": end_time,
                                                "total_time": total_time,
                                                "user": None})
                 # TODO add user
-                self.add_history_time_element(start_time, end_time, total_time)
+                self.add_history_time_element(len(self.time_history_list)-1, start_time, end_time, total_time)
                 json.dump({"time_history": self.time_history_list},
                           config_file)
             self.reset()
