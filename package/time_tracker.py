@@ -1,5 +1,7 @@
 import time
 import datetime
+import os
+import json
 import pyglet
 import tkinter as tk
 
@@ -8,14 +10,24 @@ from tkinter.font import Font
 
 class TimeTracker:
     def __init__(self):
-        self.start_time = None
-        self.end_time = None
+        self.config_file_path = "config.json"
+        self.start_datetime = None
+        self.resync_datetime = None
         self.last_time_step = None
         self.total_time = 0
         self.current_activity = None
         self.paused = False
         self.started = False
 
+        try:
+            with open(self.config_file_path, "r") as config_file:
+                config = json.load(config_file)
+                self.time_history_list = config["time_history"]
+        except FileNotFoundError:
+            self.time_history_list = []
+            with open(self.config_file_path, "w") as config_file:
+                json.dump({"time_history": []},
+                          config_file)
         # UI
         self.root = tk.Tk()
         # colors
@@ -67,15 +79,15 @@ class TimeTracker:
                                      highlightthickness=1,
                                      highlightbackground=button_hl_color,
                                      text="Start", font=button_font,
-                                     padx=180, pady=5,
+                                     padx=350, pady=5,
                                      command=self.start_action_resume_action)
         self.right_button = tk.Button(upper_button_frame,
                                       bg=button_bg_color, foreground=button_fg_color,
                                       highlightthickness=1,
                                       highlightbackground=button_hl_color,
                                       text="Stopped", font=button_font,
-                                      padx=180, pady=5,
-                                      command=self.stop_action)
+                                      padx=350, pady=5,
+                                      command=self.stop_action_save_action)
         self.right_button["state"] = tk.DISABLED
 
         self.list_frame = tk.Frame(self.root,
@@ -84,7 +96,12 @@ class TimeTracker:
                                    highlightthickness=1,
                                    height=170, width=880)
 
-        list_button_frame = tk.Frame(self.root,
+        list_button_frame_frame = tk.Frame(self.root,
+                                           background=primary_color,
+                                           highlightbackground=button_hl_color,
+                                           highlightthickness=1,
+                                           )
+        list_button_frame = tk.Frame(list_button_frame_frame,
                                      background=primary_color,
                                      highlightbackground=button_hl_color,
                                      highlightthickness=1,
@@ -94,14 +111,14 @@ class TimeTracker:
                                             highlightthickness=1,
                                             highlightbackground=button_hl_color,
                                             text="Delete", font=button_font,
-                                            padx=75, pady=5)
+                                            padx=130, pady=5)
         self.list_delete_button["state"] = tk.DISABLED
         self.list_edit_button = tk.Button(list_button_frame, foreground=button_fg_color,
                                           bg=button_bg_color,
                                           highlightthickness=1,
                                           highlightbackground=button_hl_color,
                                           text="Edit", font=button_font,
-                                          padx=75, pady=5)
+                                          padx=130, pady=5)
         self.list_edit_button["state"] = tk.DISABLED
 
         lower_button_row_frame = tk.Frame(self.root,
@@ -114,59 +131,72 @@ class TimeTracker:
                                          highlightthickness=1,
                                          highlightbackground=button_hl_color,
                                          text="Settings", font=button_font,
-                                         padx=70, pady=5)
+                                         padx=150, pady=5)
         self.about_button = tk.Button(lower_button_row_frame, foreground=button_fg_color,
                                       bg=button_bg_color,
                                       highlightthickness=1,
                                       highlightbackground=button_hl_color,
                                       text="About", font=button_font,
-                                      padx=70, pady=5)
+                                      padx=150, pady=5)
         self.help_button = tk.Button(lower_button_row_frame,
                                      bg=button_bg_color, foreground=button_fg_color,
                                      highlightthickness=1,
                                      highlightbackground=button_hl_color,
                                      text="Help", font=button_font,
-                                     padx=70, pady=5)
+                                     padx=150, pady=5)
         self.quit_button = tk.Button(lower_button_row_frame,
                                      bg=button_bg_color, foreground=button_fg_color,
                                      highlightthickness=1,
                                      highlightbackground=button_hl_color,
                                      text="Quit", font=button_font,
-                                     padx=70, pady=5,
+                                     padx=150, pady=5,
                                      command=self.quit_action)
 
         # layout
-        time_frame.pack(expand=True)
+        time_frame.pack(fill=tk.X)
         self.time_text.pack()
 
-        self.current_activity_input.pack(expand=True)
+        self.current_activity_input.pack(fill=tk.X)
 
-        upper_button_frame.pack(expand=True)
-        self.left_button.grid(row=0, column=0, padx=10, pady=5)
-        self.right_button.grid(row=0, column=1, padx=10, pady=5)
+        upper_button_frame.pack(fill=tk.X)
+        self.left_button.grid(row=0, column=0)
+        self.right_button.grid(row=0, column=1)
+        upper_button_frame.columnconfigure(0, weight=1)
+        upper_button_frame.columnconfigure(1, weight=1)
 
-        self.list_frame.pack(expand=True)
+        self.list_frame.pack(fill=tk.BOTH)
+        for time_history in self.time_history_list:
+            self.add_history_time_element(time_history["start_time"],
+                                          time_history["end_time"],
+                                          time_history["total_time"])
 
-        list_button_frame.pack(expand=True)
-        self.list_delete_button.grid(row=0, column=1, padx=0, pady=5)
-        self.list_edit_button.grid(row=0, column=2, padx=0, pady=5)
+        list_button_frame_frame.pack(fill=tk.X)
+        list_button_frame_frame.columnconfigure(0, weight=1)
+        list_button_frame_frame.columnconfigure(1, weight=0)
+        list_button_frame.grid(row=0, column=1)
+        list_button_frame.columnconfigure(0, weight=1)
+        list_button_frame.columnconfigure(1, weight=1)
+        self.list_delete_button.grid(row=0, column=0)
+        self.list_edit_button.grid(row=0, column=1)
 
-        lower_button_row_frame.pack(expand=True)
-        self.settings_button.grid(row=0, column=0, padx=0, pady=10)
-        self.about_button.grid(row=0, column=1, padx=0, pady=10)
-        self.help_button.grid(row=0, column=2, padx=0, pady=10)
-        self.quit_button.grid(row=0, column=3, padx=0, pady=10)
+        lower_button_row_frame.pack(fill=tk.X)
+        self.settings_button.grid(row=0, column=0)
+        self.about_button.grid(row=0, column=1)
+        self.help_button.grid(row=0, column=2)
+        self.quit_button.grid(row=0, column=3)
+        lower_button_row_frame.columnconfigure(0, weight=1)
+        lower_button_row_frame.columnconfigure(1, weight=1)
+        lower_button_row_frame.columnconfigure(2, weight=1)
+        lower_button_row_frame.columnconfigure(3, weight=1)
 
-        # self.root.grid_columnconfigure(0, weight=1)
-        # self.root.grid_columnconfigure(4, weight=1)
         self.root.after(100, self.update_time)
 
     def run(self):
         self.root.mainloop()
 
     def reset(self):
-        self.start_time = None
-        self.end_time = None
+        self.start_datetime = None
+        self.resync_datetime = None
         self.last_time_step = None
         self.total_time = 0
         self.current_activity = None
@@ -185,12 +215,26 @@ class TimeTracker:
             self.last_time_step = current_time_step
             self.total_time += time_diff
             self.time_text.config(text=time.strftime("%H:%M:%S", time.gmtime(self.total_time)))
+            print(f"time:     {self.total_time}")
+            time_diff_datetime = datetime.datetime.now() - self.start_datetime
+            print(f"datetime: {time_diff_datetime.total_seconds()}")
+            print(f"diff: {self.total_time - time_diff_datetime.total_seconds()}\n")
         self.root.after(100, self.update_time)
+
+    def add_history_time_element(self, start_time, end_time, total_time):
+        row_frame = tk.Frame(self.list_frame, height=50, bg="red")
+        start_time_label = tk.Label(row_frame, text=start_time)
+        end_time_label = tk.Label(row_frame, text=end_time)
+        total_time_label = tk.Label(row_frame, text=total_time)
+        row_frame.pack(expand=True)
+        start_time_label.grid(row=0, column=0)
+        end_time_label.grid(row=0, column=1)
+        total_time_label.grid(row=0, column=2)
 
     def start_action_resume_action(self):
         if not self.paused:
             current_time = datetime.datetime.now()
-            self.start_time = current_time
+            self.start_datetime = current_time
             current_time_step = time.time()
             self.last_time_step = current_time_step
             self.started = True
@@ -206,7 +250,7 @@ class TimeTracker:
             self.left_button.config(text="Start")
             self.left_button["state"] = tk.DISABLED
 
-    def stop_action(self):
+    def stop_action_save_action(self):
         if not self.paused:
             self.paused = True
             self.right_button.config(text="Save")
@@ -216,11 +260,26 @@ class TimeTracker:
             current_time_step = time.time()
             time_diff = current_time_step - self.last_time_step
             self.last_time_step = current_time_step
+            self.resync_datetime = datetime.datetime.now()
             self.total_time += time_diff
         else:
-            # TODO save!
+            with open(self.config_file_path, "w+") as config_file:
+                total_time_delta = datetime.timedelta(seconds=self.total_time)
+                start_time = self.start_datetime.strftime("%-d %B %Y, %I:%M:%S%p")
+                end_time = datetime.datetime.now().strftime("%-d %B %Y, %I:%M:%S%p")
+                total_time = f"{total_time_delta.days}:{time.strftime('%H:%M:%S%', time.gmtime(total_time_delta.seconds))}"
+                self.time_history_list.append({"start_time": start_time,
+                                               "end_time": end_time,
+                                               "total_time": total_time,
+                                               "user": None})
+                # TODO add user
+                self.add_history_time_element(start_time, end_time, total_time)
+                json.dump({"time_history": self.time_history_list},
+                          config_file)
             self.reset()
 
     def quit_action(self):
-        # TODO save before quiting
+        with open(self.config_file_path, "w+") as config_file:
+            json.dump({"time_history": self.time_history_list},
+                      config_file)
         self.root.quit()
