@@ -19,6 +19,10 @@ class TimeTracker:
         self.paused = False
         self.started = False
 
+        # TODO load
+        self.project_menu_items = []
+        self.task_menu_items = []
+
         try:
             with open(self.config_file_path, "r") as config_file:
                 config = json.load(config_file)
@@ -63,17 +67,75 @@ class TimeTracker:
                                   height=1, width=14,
                                   font=time_font)
 
-        self.current_activity_input = tk.Entry(self.root,
-                                               bg=primary_color,
-                                               highlightthickness=1,
-                                               highlightbackground=button_hl_color,
-                                               font=("", 15),
-                                               width=73)
+        # self.current_activity_input = tk.Entry(self.root,
+        #                                        bg=primary_color,
+        #                                        highlightthickness=1,
+        #                                        highlightbackground=button_hl_color,
+        #                                        font=("", 15),
+        #                                        width=73)
+        activity_input_frame = tk.Frame(self.root,
+                                        bg=primary_color,
+                                        highlightthickness=1,
+                                        highlightbackground=primary_color)
+        activity_input_project_menu_frame = tk.Frame(activity_input_frame,
+                                                     bg=primary_color,
+                                                     highlightthickness=1,
+                                                     highlightbackground=primary_color)
+        self.activity_input_project_menu_label = tk.Label(activity_input_project_menu_frame,
+                                                          text="Project:",
+                                                          highlightthickness=1,
+                                                          bg=primary_color,
+                                                          highlightbackground=primary_color,
+                                                          foreground="white",
+                                                          font=button_font)
+        self.project_menu_var = tk.Variable(self.root)
+        if len(self.project_menu_items) < 1:
+            self.project_menu_var.set("Unset")
+        else:
+            self.project_menu_var.set(self.project_menu_items[0])
+        self.project_menu_var.trace("w", self.project_menu_change)
+        self.activity_input_project_menu = tk.OptionMenu(activity_input_project_menu_frame,
+                                                         self.project_menu_var,
+                                                         self.project_menu_items)
+        self.activity_input_project_menu.config(highlightthickness=1,
+                                                bg=primary_color,
+                                                highlightbackground=primary_color,
+                                                foreground="white",
+                                                font=button_font,
+                                                width=30,
+                                                anchor='w')
+        activity_input_task_menu_frame = tk.Frame(activity_input_frame,
+                                                  bg=primary_color,
+                                                  highlightthickness=1,
+                                                  highlightbackground=primary_color)
+        self.activity_input_task_menu_label = tk.Label(activity_input_task_menu_frame,
+                                                       text="Task:",
+                                                       highlightthickness=1,
+                                                       bg=primary_color,
+                                                       highlightbackground=primary_color,
+                                                       foreground="white",
+                                                       font=button_font)
+        self.task_menu_var = tk.Variable(self.root)
+        if len(self.task_menu_items) < 1:
+            self.task_menu_var.set("Unset")
+        else:
+            self.task_menu_var.set(self.task_menu_items[0])
+        self.task_menu_var.trace("w", self.task_menu_change)
+        self.activity_input_task_menu = tk.OptionMenu(activity_input_task_menu_frame,
+                                                      self.task_menu_var,
+                                                      self.task_menu_items)
+        self.activity_input_task_menu.config(highlightthickness=1,
+                                             bg=primary_color,
+                                             highlightbackground=primary_color,
+                                             foreground="white",
+                                             font=button_font,
+                                             width=30,
+                                             anchor='w')
+
         upper_button_frame = tk.Frame(self.root,
                                       background=primary_color,
                                       highlightbackground=button_hl_color,
-                                      highlightthickness=1,
-                                      )
+                                      highlightthickness=1)
         self.left_button = tk.Button(upper_button_frame,
                                      bg=button_bg_color, foreground=button_fg_color,
                                      highlightthickness=1,
@@ -156,7 +218,16 @@ class TimeTracker:
         time_frame.pack(fill=tk.X)
         self.time_text.pack()
 
-        self.current_activity_input.pack(fill=tk.X)
+        # self.current_activity_input.pack(fill=tk.X)
+        activity_input_frame.pack(fill=tk.X)
+        activity_input_frame.columnconfigure(0, weight=1)
+        activity_input_frame.columnconfigure(1, weight=1)
+        activity_input_project_menu_frame.grid(row=0, column=0)
+        self.activity_input_project_menu_label.grid(row=0, column=0)
+        self.activity_input_project_menu.grid(row=0, column=1)
+        activity_input_task_menu_frame.grid(row=0, column=1)
+        self.activity_input_task_menu_label.grid(row=0, column=0)
+        self.activity_input_task_menu.grid(row=0, column=1)
 
         upper_button_frame.pack(fill=tk.X)
         self.left_button.grid(row=0, column=0)
@@ -238,6 +309,12 @@ class TimeTracker:
         row_frame.columnconfigure(1, weight=1)
         row_frame.columnconfigure(2, weight=1)
 
+    def project_menu_change(self, *args):
+        print(self.project_menu_var.get())
+
+    def task_menu_change(self, *args):
+        print(self.task_menu_var.get())
+
     def start_action_resume_action(self):
         if not self.paused:
             current_time = datetime.datetime.now()
@@ -280,7 +357,7 @@ class TimeTracker:
                                                "total_time": total_time,
                                                "user": None})
                 # TODO add user
-                self.add_history_time_element(len(self.time_history_list)-1, start_time, end_time, total_time)
+                self.add_history_time_element(len(self.time_history_list) - 1, start_time, end_time, total_time)
                 json.dump({"time_history": self.time_history_list},
                           config_file)
             self.reset()
